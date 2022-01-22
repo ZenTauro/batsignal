@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include "version.h"
 
 #define PROGNAME "batsignal"
@@ -78,6 +79,7 @@ static char *appname = PROGNAME;
 
 /* specify the icon used in notifications */
 static char *icon = NULL;
+static bool use_theme_icon = false;
 
 /* specify when the notification should expire */
 static int notification_expires = NOTIFY_EXPIRES_NEVER;
@@ -304,6 +306,9 @@ void parse_args(int argc, char *argv[])
         break;
       case 'I':
         icon = optarg;
+        if (optarg[0] == '\0') {
+          use_theme_icon = true;
+        }
         break;
       case 'e':
         notification_expires = NOTIFY_EXPIRES_DEFAULT;
@@ -453,6 +458,9 @@ int main(int argc, char *argv[])
 
       } else if (critical && battery_level <= critical) {
         if (battery_state != STATE_CRITICAL) {
+          if (use_theme_icon) {
+            icon = "battery-empty";
+          }
           battery_state = STATE_CRITICAL;
           notify(criticalmsg, NOTIFY_URGENCY_CRITICAL);
         }
@@ -460,6 +468,9 @@ int main(int argc, char *argv[])
       } else if (warning && battery_level <= warning) {
         duration = (battery_level - critical) * multiplier;
         if (battery_state != STATE_WARNING) {
+          if (use_theme_icon) {
+            icon = "battery-caution";
+          }
           battery_state = STATE_WARNING;
           notify(warningmsg, NOTIFY_URGENCY_NORMAL);
         }
@@ -473,6 +484,9 @@ int main(int argc, char *argv[])
         battery_state = STATE_AC;
         if (full && battery_level >= full) {
           if (battery_state != STATE_FULL) {
+            if (use_theme_icon) {
+              icon = "battery-full";
+            }
             battery_state = STATE_FULL;
             notify(fullmsg, NOTIFY_URGENCY_NORMAL);
           }
